@@ -1,0 +1,14 @@
+torch
+transformers
+datasets
+scikit-learn
+pandas
+numpy
+fastapi
+uvicorn
+python-multipart
+matplotlib
+seaborn
+faiss-cpu
+accelerate
+pytest
