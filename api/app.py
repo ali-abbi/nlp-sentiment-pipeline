@@ -5,10 +5,10 @@ import torch
 import torch.nn.functional as F
 
 # Load model + tokenizer
-MODEL_DIR = "models/sentiment_bert"
+MODEL_ID = "aliabbi/sentiment-bert"
+tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
+model = AutoModelForSequenceClassification.from_pretrained(MODEL_ID)
 
-tokenizer = AutoTokenizer.from_pretrained(MODEL_DIR)
-model = AutoModelForSequenceClassification.from_pretrained(MODEL_DIR)
 
 # Detect device (MPS for M1/M2 Macs)
 device = torch.device("mps") if torch.backends.mps.is_available() else torch.device("cpu")
