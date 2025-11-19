@@ -5,9 +5,13 @@ import torch
 import torch.nn.functional as F
 
 # Load model + tokenizer
+import os
+HF_TOKEN = os.getenv("HF_TOKEN")
+
 MODEL_ID = "aliabbi/sentiment-bert"
-tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
-model = AutoModelForSequenceClassification.from_pretrained(MODEL_ID)
+tokenizer = AutoTokenizer.from_pretrained(MODEL_ID, token=HF_TOKEN)
+model = AutoModelForSequenceClassification.from_pretrained(MODEL_ID, token=HF_TOKEN)
+
 
 # Device
 device = torch.device("mps") if torch.backends.mps.is_available() else torch.device("cpu")
