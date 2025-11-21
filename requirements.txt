@@ -1,9 +1,16 @@
-torch
-transformers
+# ML + NLP
+torch==2.2.0 --index-url https://download.pytorch.org/whl/cpu
+transformers==4.36.2
+accelerate
+huggingface_hub
+
+# API
 fastapi
 uvicorn
-pydantic
+pydantic==1.10.11
 python-multipart
+
+# Utils
 numpy
-scikit-learn
 pandas
+scikit-learn
