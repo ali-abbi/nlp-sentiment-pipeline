@@ -27,7 +27,7 @@ def load_imdb_dataset(
     """
     # Load dataset from Hugging Face (will download on first run)
     dataset = load_dataset("imdb")
-
+    print
     # Convert to pandas
     train_df = dataset["train"].to_pandas()
     test_df = dataset["test"].to_pandas()
@@ -58,3 +58,15 @@ def load_imdb_dataset(
     test_df = test_df.reset_index(drop=True)
 
     return train_df, val_df, test_df
+
+if __name__ == "__main__":
+    train_df, val_df, test_df = load_imdb_dataset(sample_size=50)
+
+    print("Train sample:")
+    print(train_df.head(), "\n")
+
+    print("Dtypes:")
+    print(train_df.dtypes, "\n")
+
+    print("Label distribution:")
+    print(train_df['label'].value_counts())
