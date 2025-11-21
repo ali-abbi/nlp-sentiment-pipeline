@@ -4,16 +4,12 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import torch
 import torch.nn.functional as F
 
-# Load model + tokenizer
-import os
-HF_TOKEN = os.getenv("HF_TOKEN")
+# Load local model
+MODEL_PATH = "models/sentiment_distilbert"
+tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH)
+model = AutoModelForSequenceClassification.from_pretrained(MODEL_PATH)
 
-MODEL_ID = "aliabbi/sentiment-bert"
-tokenizer = AutoTokenizer.from_pretrained(MODEL_ID, token=HF_TOKEN)
-model = AutoModelForSequenceClassification.from_pretrained(MODEL_ID, token=HF_TOKEN)
-
-
-# Device
+# Device (CPU for Docker)
 device = torch.device("mps") if torch.backends.mps.is_available() else torch.device("cpu")
 model.to(device)
 model.eval()
@@ -36,10 +32,10 @@ def predict(input: InputText):
 
     with torch.no_grad():
         outputs = model(**encoded)
-        probs = F.softmax(outputs.logits, dim=1)[0]
+        probs = F.softmax(outputs.logits, dim=1)[0].cpu().tolist()
 
-    probs = probs.cpu().numpy().tolist()
-    label_id = int(torch.argmax(probs))
+    # Use logits argmax, not list argmax
+    label_id = int(torch.argmax(outputs.logits, dim=1).item())
     label = "negative" if label_id == 0 else "positive"
 
     return {
