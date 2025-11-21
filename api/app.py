@@ -5,9 +5,10 @@ import torch
 import torch.nn.functional as F
 
 # Load local model
-MODEL_PATH = "models/sentiment_distilbert"
-tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH)
-model = AutoModelForSequenceClassification.from_pretrained(MODEL_PATH)
+MODEL_ID = "aliabbi/sentiment-distilbert"
+
+tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
+model = AutoModelForSequenceClassification.from_pretrained(MODEL_ID)
 
 # Device (CPU for Docker)
 device = torch.device("mps") if torch.backends.mps.is_available() else torch.device("cpu")
