@@ -11,6 +11,6 @@ pydantic==1.10.11
 python-multipart
 
 # Utils
-numpy
+numpy==1.26.4
 pandas
 scikit-learn
