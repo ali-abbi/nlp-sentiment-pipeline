@@ -4,6 +4,15 @@ from pydantic import BaseModel
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import torch
 import torch.nn.functional as F
+import logging
+import time
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+)
+
+logger = logging.getLogger(__name__)
 
 
 # Load local model
@@ -49,6 +58,11 @@ def home():
 
 @app.post("/predict")
 def predict(input: InputText):
+
+    logger.info(f"REQUEST /predict text='{input.text[:80]}...'")
+
+    start = time.time()
+
     encoded = tokenizer(
         input.text,
         return_tensors="pt",
@@ -58,11 +72,18 @@ def predict(input: InputText):
     )
     encoded = {k: v.to(device) for k, v in encoded.items()}
 
-    with torch.no_grad():
-        outputs = model(**encoded)
-        probs = F.softmax(outputs.logits, dim=1)[0].cpu().tolist()
+    try:
+        with torch.no_grad():
+            outputs = model(**encoded)
+            probs = F.softmax(outputs.logits, dim=1)[0]
+    except Exception as e:
+        logger.error(f"🔥 MODEL ERROR: {str(e)}")
+        raise e
 
-    # Use logits argmax, not list argmax
+    duration = (time.time() - start) * 1000
+    logger.info(f"RESPONSE /predict took {duration:.2f}ms")
+
+    probs = probs.cpu().numpy().tolist()
     label_id = int(torch.argmax(outputs.logits, dim=1).item())
     label = "negative" if label_id == 0 else "positive"
 
@@ -74,9 +95,14 @@ def predict(input: InputText):
         }
     }
 
+
 @app.post("/predict-form", response_class=HTMLResponse)
 def predict_form(text: str = Form(...)):
-    # Reuse the same logic as /predict
+
+    logger.info(f"REQUEST /predict-form text='{text[:80]}...'")
+
+    start = time.time()
+
     encoded = tokenizer(
         text,
         return_tensors="pt",
@@ -86,9 +112,16 @@ def predict_form(text: str = Form(...)):
     )
     encoded = {k: v.to(device) for k, v in encoded.items()}
 
-    with torch.no_grad():
-        outputs = model(**encoded)
-        probs = F.softmax(outputs.logits, dim=1)[0]
+    try:
+        with torch.no_grad():
+            outputs = model(**encoded)
+            probs = F.softmax(outputs.logits, dim=1)[0]
+    except Exception as e:
+        logger.error(f"🔥 MODEL ERROR: {str(e)}")
+        raise e
+
+    duration = (time.time() - start) * 1000
+    logger.info(f"RESPONSE /predict-form took {duration:.2f}ms")
 
     probs = probs.cpu().numpy().tolist()
     label_id = int(torch.argmax(outputs.logits, dim=1).item())
@@ -96,9 +129,6 @@ def predict_form(text: str = Form(...)):
 
     return f"""
     <html>
-      <head>
-        <title>Sentiment Analysis - Result</title>
-      </head>
       <body>
         <h1>Sentiment Analysis</h1>
         <p><strong>Input:</strong> {text}</p>
@@ -108,3 +138,7 @@ def predict_form(text: str = Form(...)):
       </body>
     </html>
     """
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
