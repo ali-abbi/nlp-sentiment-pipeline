@@ -105,6 +105,7 @@ def predict_form(text: str = Form(...)):
 
     start = time.time()
 
+    # Tokenize
     encoded = tokenizer(
         text,
         return_tensors="pt",
@@ -115,6 +116,7 @@ def predict_form(text: str = Form(...)):
     encoded = {k: v.to(device) for k, v in encoded.items()}
 
     try:
+        # Inference
         with torch.no_grad():
             outputs = model(**encoded)
             probs = F.softmax(outputs.logits, dim=1)[0]
@@ -125,21 +127,61 @@ def predict_form(text: str = Form(...)):
     duration = (time.time() - start) * 1000
     logger.info(f"RESPONSE /predict-form took {duration:.2f}ms")
 
+    # Extract probabilities
     probs = probs.cpu().numpy().tolist()
+    neg = probs[0]
+    pos = probs[1]
     label_id = int(torch.argmax(outputs.logits, dim=1).item())
     label = "negative" if label_id == 0 else "positive"
 
     return f"""
     <html>
+      <head>
+        <title>Sentiment Result</title>
+        <style>
+          body {{ font-family: sans-serif; max-width: 600px; margin: 40px auto; }}
+
+          .bar-container {{
+            width: 100%;
+            background: #eee;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 10px;
+          }}
+          .bar {{
+            height: 22px;
+            color: white;
+            font-size: 14px;
+            text-align: center;
+            line-height: 22px;
+          }}
+          .neg {{ background: #d9534f; width: {neg * 100:.1f}%; }}
+          .pos {{ background: #5cb85c; width: {pos * 100:.1f}%; }}
+        </style>
+      </head>
+
       <body>
-        <h1>Sentiment Analysis</h1>
+        <h1>Sentiment Analysis Result</h1>
+
         <p><strong>Input:</strong> {text}</p>
-        <p><strong>Prediction:</strong> {label}</p>
-        <p>Negative: {probs[0]:.4f} &nbsp;&nbsp; Positive: {probs[1]:.4f}</p>
+        <p><strong>Prediction:</strong> {label.upper()}</p>
+
+        <p>Negative ({neg:.4f})</p>
+        <div class="bar-container">
+          <div class="bar neg">{neg * 100:.1f}%</div>
+        </div>
+
+        <p>Positive ({pos:.4f})</p>
+        <div class="bar-container">
+          <div class="bar pos">{pos * 100:.1f}%</div>
+        </div>
+
+        <br/>
         <a href="/">Back</a>
       </body>
     </html>
     """
+
 
 @app.get("/health")
 def health():
