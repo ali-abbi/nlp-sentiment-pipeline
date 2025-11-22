@@ -22,7 +22,7 @@ tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
 model = AutoModelForSequenceClassification.from_pretrained(MODEL_ID)
 
 # Device (CPU for Docker)
-device = torch.device("mps") if torch.backends.mps.is_available() else torch.device("cpu")
+device = torch.device("cpu")
 model.to(device)
 model.eval()
 
@@ -55,6 +55,8 @@ def home():
       </body>
     </html>
     """
+
+
 
 @app.post("/predict")
 def predict(input: InputText):
